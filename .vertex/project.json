@@ -1,0 +1,248 @@
+{
+  "attempts": [
+    {
+      "check_id": "foundation",
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_foundation.py",
+        "-q"
+      ],
+      "finished_at": "2026-10-08T10:53:49.727+00:00",
+      "id": "AT-170e9edecf1a45cf9866747d2cbac32b",
+      "note": null,
+      "pid": 29353,
+      "receipt_id": "EV-3409b888e4b04d32afeefbdb8b89eea6",
+      "started_at": "2026-10-08T10:53:49.436+00:00",
+      "status": "finished",
+      "task_id": "SP-1"
+    }
+  ],
+  "checkpoints": [],
+  "evidence": [
+    {
+      "check_id": "foundation",
+      "command": [
+        "python3",
+        "-m",
+        "pytest",
+        "tests/test_foundation.py",
+        "-q"
+      ],
+      "criterion_ids": [
+        "AC-1",
+        "AC-2"
+      ],
+      "exit_code": 0,
+      "finished_at": "2026-10-08T10:53:49.727+00:00",
+      "id": "EV-3409b888e4b04d32afeefbdb8b89eea6",
+      "outcome": "passed",
+      "source_after": "99c5ba04d72331a903c6f3884465a0ab1d5f6f5ae702ec179fe4156bc658dfc0",
+      "source_before": "99c5ba04d72331a903c6f3884465a0ab1d5f6f5ae702ec179fe4156bc658dfc0",
+      "started_at": "2026-10-08T10:53:49.436+00:00",
+      "stderr": "",
+      "stdout": "..                                                                       [100%]\n2 passed in 0.01s\n",
+      "task_id": "SP-1"
+    }
+  ],
+  "project": {
+    "objective": "Deliver SourcePilot as a runnable, evidence-backed multi-agent procurement application",
+    "tasks": [
+      {
+        "acceptance_criteria": [
+          {
+            "description": "Repository metadata consistently names SourcePilot",
+            "id": "AC-1"
+          },
+          {
+            "description": "Docker Compose defines database, API, worker, and web services",
+            "id": "AC-2"
+          }
+        ],
+        "blocker": null,
+        "checks": [
+          {
+            "command": [
+              "python3",
+              "-m",
+              "pytest",
+              "tests/test_foundation.py",
+              "-q"
+            ],
+            "criterion_ids": [
+              "AC-1",
+              "AC-2"
+            ],
+            "id": "foundation",
+            "timeout_seconds": 300
+          }
+        ],
+        "dependencies": [],
+        "id": "SP-1",
+        "outcome": "The monorepo has reproducible configuration, local infrastructure, and project documentation",
+        "status": "completed",
+        "title": "Establish SourcePilot foundation"
+      },
+      {
+        "acceptance_criteria": [
+          {
+            "description": "Core procurement entities and migration exist",
+            "id": "AC-3"
+          },
+          {
+            "description": "API creates and retrieves isolated procurement workflows",
+            "id": "AC-4"
+          }
+        ],
+        "blocker": null,
+        "checks": [
+          {
+            "command": [
+              "python3",
+              "-m",
+              "pytest",
+              "tests/test_domain.py",
+              "tests/test_api_contract.py",
+              "-q"
+            ],
+            "criterion_ids": [
+              "AC-3",
+              "AC-4"
+            ],
+            "id": "backend",
+            "timeout_seconds": 300
+          }
+        ],
+        "dependencies": [
+          "SP-1"
+        ],
+        "id": "SP-2",
+        "outcome": "Requests, workflows, suppliers, evidence, recommendations, and approvals are persisted behind typed APIs",
+        "status": "planned",
+        "title": "Build persistent procurement API"
+      },
+      {
+        "acceptance_criteria": [
+          {
+            "description": "Capabilities switch providers without agent changes",
+            "id": "AC-5"
+          },
+          {
+            "description": "Task dependencies, retries, partial failures, and parallel work are verified",
+            "id": "AC-6"
+          },
+          {
+            "description": "Deterministic evaluation produces evidence-backed recommendations",
+            "id": "AC-7"
+          }
+        ],
+        "blocker": null,
+        "checks": [
+          {
+            "command": [
+              "python3",
+              "-m",
+              "pytest",
+              "tests/test_orchestration.py",
+              "tests/test_providers.py",
+              "-q"
+            ],
+            "criterion_ids": [
+              "AC-5",
+              "AC-6",
+              "AC-7"
+            ],
+            "id": "orchestration",
+            "timeout_seconds": 300
+          }
+        ],
+        "dependencies": [
+          "SP-2"
+        ],
+        "id": "SP-3",
+        "outcome": "Provider-independent research, verification, evaluation, and recommendation run with bounded concurrency and recovery semantics",
+        "status": "planned",
+        "title": "Implement agent workflow"
+      },
+      {
+        "acceptance_criteria": [
+          {
+            "description": "Dashboard supports multiple active requests",
+            "id": "AC-8"
+          },
+          {
+            "description": "Details and execution routes expose recommendations and operational progress",
+            "id": "AC-9"
+          },
+          {
+            "description": "Architecture route documents the implemented design",
+            "id": "AC-10"
+          }
+        ],
+        "blocker": null,
+        "checks": [
+          {
+            "command": [
+              "npm",
+              "--prefix",
+              "apps/web",
+              "run",
+              "check"
+            ],
+            "criterion_ids": [
+              "AC-8",
+              "AC-9",
+              "AC-10"
+            ],
+            "id": "frontend",
+            "timeout_seconds": 300
+          }
+        ],
+        "dependencies": [
+          "SP-3"
+        ],
+        "id": "SP-4",
+        "outcome": "Users can submit, monitor, inspect, and approve procurement work in a responsive product UI",
+        "status": "planned",
+        "title": "Create procurement workspace"
+      },
+      {
+        "acceptance_criteria": [
+          {
+            "description": "Backend and frontend verification pass",
+            "id": "AC-11"
+          },
+          {
+            "description": "README documents setup, providers, migrations, tests, and recovery",
+            "id": "AC-12"
+          }
+        ],
+        "blocker": null,
+        "checks": [
+          {
+            "command": [
+              "make",
+              "verify"
+            ],
+            "criterion_ids": [
+              "AC-11",
+              "AC-12"
+            ],
+            "id": "integrated",
+            "timeout_seconds": 300
+          }
+        ],
+        "dependencies": [
+          "SP-4"
+        ],
+        "id": "SP-5",
+        "outcome": "SourcePilot is documented, tested, recoverable, and runnable locally",
+        "status": "planned",
+        "title": "Verify integrated delivery"
+      }
+    ]
+  },
+  "revision": 15,
+  "schema_version": 3
+}
