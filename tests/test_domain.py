@@ -2,7 +2,7 @@ from sourcepilot.services import normalize_requirements
 
 
 def test_normalizes_quantity_without_using_an_llm() -> None:
-    normalized = normalize_requirements("Find 50 MacBook Pro 14-inch laptops for the company.")
+    normalized = normalize_requirements("Source 50 business laptops for the Sharjah office.")
     assert normalized["quantity"] == 50
     assert normalized["category"] == "laptop"
 

@@ -1,4 +1,4 @@
-import type { Execution, ProcurementRequest, Recommendation, RequestDetail } from "./types";
+import type { CompanyContext, Execution, ProcurementRequest, Recommendation, RequestDetail } from "./types";
 
 const baseUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8000/api/v1";
 
@@ -15,6 +15,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  getContext: () => request<CompanyContext>("/context"),
   listRequests: () => request<ProcurementRequest[]>("/requests"),
   getRequest: (id: string) => request<RequestDetail>(`/requests/${id}`),
   getExecution: (workflowId: string) => request<Execution>(`/workflows/${workflowId}`),
@@ -29,4 +30,3 @@ export const api = {
       body: JSON.stringify({ decision, note: note || null }),
     }),
 };
-

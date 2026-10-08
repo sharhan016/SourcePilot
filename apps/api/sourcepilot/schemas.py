@@ -9,6 +9,15 @@ class CreateProcurementRequest(BaseModel):
     request: str = Field(min_length=10, max_length=2000)
 
 
+class CompanyContextView(BaseModel):
+    company_name: str
+    company_location: str
+    country: str
+    currency: str
+    procurement_region: str
+    sourcing_regions: list[str]
+
+
 class WorkflowSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

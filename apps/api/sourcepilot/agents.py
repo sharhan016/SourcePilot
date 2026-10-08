@@ -24,13 +24,16 @@ class ResearchAgent:
         self.llm = llm
         self.max_rounds = max_rounds
 
-    async def run(
-        self, requirements: dict[str, Any], company_location: str
-    ) -> list[ProductCandidate]:
+    async def run(self, requirements: dict[str, Any]) -> list[ProductCandidate]:
         description = requirements["description"]
+        delivery_location = requirements.get("delivery_location", "")
+        procurement_region = requirements.get("procurement_region", "")
+        sourcing_regions = " ".join(requirements.get("sourcing_regions", []))
+        currency = requirements.get("currency", "")
         queries = [
-            f"{description} price stock warranty {company_location}",
-            f"{description} authorized reseller business delivery {company_location}",
+            f"{description} price stock warranty {currency} {delivery_location}",
+            f"{description} authorized reseller business delivery "
+            f"{procurement_region} {sourcing_regions}",
         ][: self.max_rounds]
         documents: dict[str, SearchDocument] = {}
         for query in queries:
@@ -121,7 +124,11 @@ class VerificationAgent:
 
 class EvaluationAgent:
     def evaluate(
-        self, candidates: list[ProductCandidate], verification: dict[str, str], quantity: int
+        self,
+        candidates: list[ProductCandidate],
+        verification: dict[str, str],
+        quantity: int,
+        currency: str,
     ) -> list[dict[str, Any]]:
         evaluated: list[dict[str, Any]] = []
         for candidate in candidates:
@@ -132,10 +139,17 @@ class EvaluationAgent:
                 quantity_status = "confirmed"
             else:
                 quantity_status = "insufficient"
+            if candidate.currency is None:
+                currency_status = "unconfirmed"
+            elif candidate.currency.casefold() == currency.casefold():
+                currency_status = "confirmed"
+            else:
+                currency_status = "mismatch"
             qualifies = (
                 verification.get(key) == "verified"
                 and candidate.unit_price is not None
                 and quantity_status == "confirmed"
+                and currency_status == "confirmed"
             )
             total = candidate.unit_price * quantity if candidate.unit_price is not None else None
             evaluated.append(
@@ -150,6 +164,7 @@ class EvaluationAgent:
                     else None,
                     "total_cost": str(total) if total is not None else None,
                     "currency": candidate.currency,
+                    "currency_status": currency_status,
                     "quantity_status": quantity_status,
                     "available_quantity": candidate.available_quantity,
                     "availability": candidate.availability,

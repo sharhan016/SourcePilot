@@ -97,5 +97,5 @@ export function RequestDetails() {
 }
 
 function formatMoney(value: string, currency: string | null) {
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency: currency ?? "INR", maximumFractionDigits: 0 }).format(Number(value));
+  return new Intl.NumberFormat(undefined, { style: "currency", currency: currency ?? "AED", maximumFractionDigits: 0 }).format(Number(value));
 }

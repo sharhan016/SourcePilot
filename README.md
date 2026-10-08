@@ -5,9 +5,12 @@ requirement into a persistent, evidence-backed supplier recommendation. Speciali
 agents coordinate external research, verification, deterministic evaluation, and a
 concise shortlist while purchasing remains behind explicit human approval.
 
-The first vertical slice supports: **“Find 50 MacBook Pro 14-inch laptops for the
-company.”** The workflow and capability boundaries are category-neutral so later
-procurement categories do not require a new orchestration layer.
+The default demo organization is **IT Essentials (ITE)** in Sharjah, United Arab
+Emirates. Its primary scenario is: **“Source 50 business laptops for IT Essentials'
+Sharjah office with UAE warranty and delivery.”** AED is the comparison currency,
+the UAE is the primary procurement region, and the wider GCC is available for sourcing.
+These values are configuration, not architectural constraints; the workflow and
+capability boundaries remain geography- and category-neutral.
 
 Development is managed with the **Vertex Harness**. The committed
 `.vertex/project.json` is the durable milestone ledger, and each completed milestone
@@ -54,13 +57,18 @@ Key switches are:
 | LLM adapter | `LLM_PROVIDER` | `openai` or `openrouter` |
 | LLM model | `LLM_MODEL` | a model available from the selected provider |
 | Search adapter | `SEARCH_PROVIDER` | `exa` or `firecrawl` |
+| Company | `COMPANY_NAME`, `COMPANY_LOCATION`, `COMPANY_COUNTRY` | organization context |
+| Currency | `DEFAULT_CURRENCY` | ISO 4217 code such as `AED` |
+| Geography | `PROCUREMENT_REGION`, `SOURCING_REGIONS` | primary and permitted sourcing regions |
 | Tool concurrency | `MAX_CONCURRENT_TOOLS` | positive integer |
 | Workflow concurrency | `MAX_CONCURRENT_WORKFLOWS` | positive integer |
 | Retries | `PROVIDER_MAX_RETRIES` | bounded non-negative integer |
 
 Set `OPENAI_API_KEY` or `OPENROUTER_API_KEY`, and `EXA_API_KEY` or
 `FIRECRAWL_API_KEY`, for the selected providers. A configured secondary search key is
-used as a fallback. Agents never reference provider names directly.
+used as a fallback. Agents never reference provider names directly. Company, currency,
+delivery location, and sourcing geography are passed into each new procurement request
+from configuration so another organization can replace the UAE demo without code changes.
 
 ## Run with Docker
 
@@ -146,6 +154,7 @@ work. Failed providers and unavailable claims are retained as explicit state.
 ## API surface
 
 - `POST /api/v1/requests`
+- `GET /api/v1/context`
 - `GET /api/v1/requests`
 - `GET /api/v1/requests/{id}`
 - `GET /api/v1/requests/{id}/suppliers`

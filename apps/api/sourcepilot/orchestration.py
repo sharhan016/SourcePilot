@@ -121,6 +121,9 @@ class Orchestrator:
                             candidates,
                             verification,
                             workflow.request.normalized_requirements["quantity"],
+                            workflow.request.normalized_requirements.get(
+                                "currency", self.settings.default_currency
+                            ),
                         )
                         output = {"compared": len(evaluations)}
                     else:
@@ -190,9 +193,14 @@ class Orchestrator:
 
     async def _research(self, request: ProcurementRequest) -> list[ProductCandidate]:
         search, llm, client = await self._capabilities()
+        requirements = dict(request.normalized_requirements)
+        requirements.setdefault("currency", self.settings.default_currency)
+        requirements.setdefault("delivery_location", request.company_location)
+        requirements.setdefault("procurement_region", self.settings.procurement_region)
+        requirements.setdefault("sourcing_regions", self.settings.sourcing_regions)
         try:
             return await ResearchAgent(search, llm, self.settings.research_max_rounds).run(
-                request.normalized_requirements, request.company_location
+                requirements
             )
         finally:
             await client.aclose()
@@ -428,7 +436,10 @@ class Orchestrator:
         verification = {product.source_url: product.verification_status for product in products}
         request = await session.get(ProcurementRequest, request_id)
         return EvaluationAgent().evaluate(
-            candidates, verification, request.normalized_requirements["quantity"]
+            candidates,
+            verification,
+            request.normalized_requirements["quantity"],
+            request.normalized_requirements.get("currency", self.settings.default_currency),
         )
 
     async def _recommend(

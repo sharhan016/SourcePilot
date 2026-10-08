@@ -7,6 +7,7 @@ from sourcepilot.config import Settings, get_settings
 from sourcepilot.db import get_session
 from sourcepilot.repositories import ProcurementRepository, WorkflowRepository
 from sourcepilot.schemas import (
+    CompanyContextView,
     CreateProcurementRequest,
     ExecutionView,
     RecommendationView,
@@ -20,6 +21,18 @@ from sourcepilot.services import ProcurementService
 router = APIRouter(prefix="/api/v1")
 Session = Annotated[AsyncSession, Depends(get_session)]
 Config = Annotated[Settings, Depends(get_settings)]
+
+
+@router.get("/context", response_model=CompanyContextView)
+async def get_company_context(config: Config):
+    return {
+        "company_name": config.company_name,
+        "company_location": config.company_location,
+        "country": config.company_country,
+        "currency": config.default_currency,
+        "procurement_region": config.procurement_region,
+        "sourcing_regions": config.sourcing_regions,
+    }
 
 
 @router.post("/requests", response_model=RequestSummary, status_code=status.HTTP_202_ACCEPTED)

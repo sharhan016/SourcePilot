@@ -1,6 +1,16 @@
 import { NavLink, Outlet } from "react-router-dom";
 
+import { api } from "../api";
+import { usePolling } from "../hooks";
+
+const defaultContext = {
+  company_name: "IT Essentials (ITE)",
+  company_location: "Sharjah, United Arab Emirates",
+};
+
 export function Layout() {
+  const { data: context = defaultContext } = usePolling(api.getContext, 60_000);
+
   return (
     <div className="shell">
       <header className="masthead">
@@ -14,7 +24,7 @@ export function Layout() {
         </nav>
         <div className="company-context">
           <span>Company context</span>
-          <strong>Acme Operations · Bengaluru</strong>
+          <strong>{context.company_name} · {context.company_location}</strong>
         </div>
       </header>
       <main>
@@ -27,4 +37,3 @@ export function Layout() {
     </div>
   );
 }
-

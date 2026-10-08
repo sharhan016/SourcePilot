@@ -50,8 +50,8 @@ class RecordingSearchProvider:
                 title=f"Supplier {index}",
                 url=f"https://supplier{index}.example/product",
                 content=(
-                    f"Supplier {index} lists MacBook Pro 14-inch in stock for INR "
-                    f"{150000 + index * 1000}"
+                    f"Supplier {index} lists business laptops in stock for AED "
+                    f"{5500 + index * 100}"
                 ),
                 provider=self.name,
             )
@@ -74,8 +74,8 @@ class ExtractingLLM:
                     product_name="MacBook Pro 14-inch",
                     manufacturer="Apple",
                     model="M-series",
-                    unit_price=Decimal(150000 + index * 1000),
-                    currency="INR",
+                    unit_price=Decimal(5500 + index * 100),
+                    currency="AED",
                     available_quantity=75,
                     availability="In stock",
                     warranty="One year",
@@ -124,7 +124,7 @@ async def test_workflow_runs_agents_persists_result_and_parallelizes_verificatio
     settings = Settings(max_concurrent_tools=3, research_max_rounds=1)
     async with factory() as session:
         procurement = await ProcurementService(session, settings).create(
-            "Find 50 MacBook Pro 14-inch laptops for the company"
+            "Source 50 business laptops for IT Essentials' Sharjah office"
         )
         workflow_id = procurement.workflow.id
 
@@ -145,7 +145,7 @@ async def test_workflow_runs_agents_persists_result_and_parallelizes_verificatio
         evidence_count = len((await session.execute(select(Evidence))).scalars().all())
         assert workflow.status == WorkflowStatus.COMPLETED
         assert recommendation.status == "ready"
-        assert recommendation.total_cost == Decimal("7500000.00")
+        assert recommendation.total_cost == Decimal("275000.00")
         assert recommendation.evidence_references
         assert evidence_count >= 6  # extracted claims plus independent verification sources
     assert search.peak >= 2

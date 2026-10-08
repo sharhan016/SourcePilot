@@ -58,6 +58,12 @@ The current recommendation synthesis is deliberately deterministic. LLMs are use
 semi-structured extraction, where interpretation is useful; they are not used for
 arithmetic, status transitions, filtering, or approval.
 
+Organization name, delivery location, country, comparison currency, primary procurement
+region, and permitted sourcing regions are runtime configuration. New requests persist a
+snapshot of the relevant procurement context, and the research agent includes that context
+in discovery and extraction. The shipped demo uses IT Essentials (ITE) in Sharjah, AED,
+the UAE, and the wider GCC; none of those values limits the architecture to that geography.
+
 ## Capabilities and providers
 
 Agents depend on `WebSearchCapability` and `LLMProvider` protocols. Exa and Firecrawl
@@ -94,7 +100,6 @@ equivalent policy object.
 - The database is the queue. The worker seam permits later adoption of a dedicated
   broker without changing domain records.
 - Research caching is per orchestrator run rather than cross-workflow.
-- Currency conversion is intentionally absent; unlike currencies are not silently
-  compared.
+- Currency conversion is intentionally absent; offers outside the request's configured
+  currency remain visible as evidence but cannot qualify for deterministic ranking.
 - Supplier contact enrichment and procurement-policy administration are future slices.
-

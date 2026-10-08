@@ -7,6 +7,15 @@ export type Workflow = {
   error: string | null;
 };
 
+export type CompanyContext = {
+  company_name: string;
+  company_location: string;
+  country: string;
+  currency: string;
+  procurement_region: string;
+  sourcing_regions: string[];
+};
+
 export type ProcurementRequest = {
   id: string;
   original_request: string;
@@ -88,4 +97,3 @@ export type ExecutionEvent = {
 };
 
 export type Execution = { workflow: Workflow; tasks: WorkflowTask[]; events: ExecutionEvent[] };
-

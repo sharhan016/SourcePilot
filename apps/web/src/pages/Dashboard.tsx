@@ -5,7 +5,7 @@ import { api } from "../api";
 import { Status } from "../components/Status";
 import { usePolling } from "../hooks";
 
-const example = "Find 50 MacBook Pro 14-inch laptops for the company.";
+const example = "Source 50 business laptops for IT Essentials' Sharjah office with UAE warranty and delivery.";
 
 export function Dashboard() {
   const loader = useCallback(() => api.listRequests(), []);
@@ -49,7 +49,7 @@ export function Dashboard() {
               id="procurement-request"
               value={requestText}
               onChange={(event) => setRequestText(event.target.value)}
-              placeholder="Find 50 MacBook Pro 14-inch laptops for the company."
+              placeholder="Source 50 business laptops for a Sharjah office with UAE warranty and delivery."
               minLength={10}
               maxLength={2000}
               rows={3}
@@ -118,4 +118,3 @@ function RequestRow({ request, index }: { request: Awaited<ReturnType<typeof api
     </article>
   );
 }
-

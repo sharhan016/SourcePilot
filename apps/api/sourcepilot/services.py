@@ -32,12 +32,21 @@ class ProcurementService:
         self.requests = ProcurementRepository(session)
 
     async def create(self, original_request: str) -> ProcurementRequest:
+        requirements = normalize_requirements(original_request)
+        requirements.update(
+            {
+                "currency": self.settings.default_currency,
+                "delivery_location": self.settings.company_location,
+                "procurement_region": self.settings.procurement_region,
+                "sourcing_regions": self.settings.sourcing_regions,
+            }
+        )
         procurement = ProcurementRequest(
             id=uuid4(),
             company_name=self.settings.company_name,
             company_location=self.settings.company_location,
             original_request=original_request,
-            normalized_requirements=normalize_requirements(original_request),
+            normalized_requirements=requirements,
         )
         workflow = Workflow(id=uuid4(), request=procurement)
         previous: list[str] = []

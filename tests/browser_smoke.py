@@ -7,11 +7,14 @@ from playwright.sync_api import sync_playwright
 
 REQUEST = {
     "id": "request-1",
-    "original_request": "Find 50 MacBook Pro 14-inch laptops for the company.",
+    "original_request": (
+        "Source 50 business laptops for IT Essentials' Sharjah office with UAE warranty "
+        "and delivery."
+    ),
     "normalized_requirements": {"quantity": 50, "category": "laptop"},
     "status": "completed",
-    "company_name": "Acme Operations",
-    "company_location": "Bengaluru, India",
+    "company_name": "IT Essentials (ITE)",
+    "company_location": "Sharjah, United Arab Emirates",
     "created_at": "2026-10-08T08:00:00Z",
     "updated_at": "2026-10-08T08:05:00Z",
     "workflow": {
@@ -31,7 +34,7 @@ DETAIL = {
             "id": "supplier-1",
             "name": "Verified Business Store",
             "website": "https://supplier.example",
-            "location": "Bengaluru",
+            "location": "Sharjah",
             "supplier_type": "authorized reseller",
             "verification_status": "verified",
             "products": [
@@ -41,8 +44,8 @@ DETAIL = {
                     "manufacturer": "Apple",
                     "model": "M-series",
                     "specifications": {},
-                    "unit_price": "150000.00",
-                    "currency": "INR",
+                    "unit_price": "5500.00",
+                    "currency": "AED",
                     "available_quantity": 75,
                     "availability": "In stock",
                     "warranty": "One year",
@@ -57,8 +60,8 @@ DETAIL = {
         "id": "recommendation-1",
         "selected_options": [],
         "evaluation_results": [],
-        "total_cost": "7500000.00",
-        "currency": "INR",
+        "total_cost": "275000.00",
+        "currency": "AED",
         "reasoning_summary": "Recommend the verified option with the lowest comparable total.",
         "evidence_references": ["https://supplier.example/product"],
         "status": "ready",
@@ -100,7 +103,16 @@ def run() -> None:
 
         def route_api(route) -> None:
             url = route.request.url
-            if url.endswith("/requests") and route.request.method == "GET":
+            if url.endswith("/context"):
+                body = {
+                    "company_name": "IT Essentials (ITE)",
+                    "company_location": "Sharjah, United Arab Emirates",
+                    "country": "United Arab Emirates",
+                    "currency": "AED",
+                    "procurement_region": "UAE",
+                    "sourcing_regions": ["United Arab Emirates", "GCC"],
+                }
+            elif url.endswith("/requests") and route.request.method == "GET":
                 body = [REQUEST]
             elif url.endswith("/requests") and route.request.method == "POST":
                 body = {**REQUEST, "id": "request-2"}

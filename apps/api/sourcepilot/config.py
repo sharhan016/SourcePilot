@@ -13,8 +13,12 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     database_url: str = "sqlite+aiosqlite:///./sourcepilot.db"
     cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
-    company_name: str = "Acme Operations"
-    company_location: str = "Bengaluru, India"
+    company_name: str = "IT Essentials (ITE)"
+    company_location: str = "Sharjah, United Arab Emirates"
+    company_country: str = "United Arab Emirates"
+    default_currency: str = "AED"
+    procurement_region: str = "UAE"
+    sourcing_regions: Annotated[list[str], NoDecode] = ["United Arab Emirates", "GCC"]
     max_concurrent_workflows: int = 2
     max_concurrent_tools: int = 5
     provider_timeout_seconds: float = 20.0
@@ -28,7 +32,7 @@ class Settings(BaseSettings):
     exa_api_key: str | None = None
     firecrawl_api_key: str | None = None
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "sourcing_regions", mode="before")
     @classmethod
     def split_origins(cls, value: object) -> object:
         if isinstance(value, str):
