@@ -1,0 +1,14 @@
+from sourcepilot.services import normalize_requirements
+
+
+def test_normalizes_quantity_without_using_an_llm() -> None:
+    normalized = normalize_requirements("Find 50 MacBook Pro 14-inch laptops for the company.")
+    assert normalized["quantity"] == 50
+    assert normalized["category"] == "laptop"
+
+
+def test_unknown_values_are_not_invented() -> None:
+    normalized = normalize_requirements("Find ergonomic chairs for the studio")
+    assert normalized["quantity"] == 1
+    assert "price" not in normalized
+
