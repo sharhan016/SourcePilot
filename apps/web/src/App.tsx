@@ -3,7 +3,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { Architecture } from "./pages/Architecture";
 import { Dashboard } from "./pages/Dashboard";
-import { Execution } from "./pages/Execution";
 import { RequestDetails } from "./pages/RequestDetails";
 
 const router = createBrowserRouter([
@@ -12,7 +11,7 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Dashboard /> },
       { path: "/requests/:id", element: <RequestDetails /> },
-      { path: "/requests/:id/execution", element: <Execution /> },
+      { path: "/requests/:id/execution", element: <RequestDetails executionOpen /> },
       { path: "/architecture", element: <Architecture /> },
     ],
   },
@@ -21,4 +20,3 @@ const router = createBrowserRouter([
 export function App() {
   return <RouterProvider router={router} />;
 }
-

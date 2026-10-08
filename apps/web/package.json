@@ -10,12 +10,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@gsap/react": "^2.1.2",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "gsap": "^3.15.0",
     "mermaid": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "react-router-dom": "latest"
+    "react-router-dom": "latest",
+    "vite": "latest"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "latest",

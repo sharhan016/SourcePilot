@@ -56,8 +56,8 @@ export type Supplier = {
 
 export type Recommendation = {
   id: string;
-  selected_options: Array<Record<string, string | boolean | null>>;
-  evaluation_results: Array<Record<string, string | boolean | null>>;
+  selected_options: Array<Record<string, unknown>>;
+  evaluation_results: Array<Record<string, unknown>>;
   total_cost: string | null;
   currency: string | null;
   reasoning_summary: string;
