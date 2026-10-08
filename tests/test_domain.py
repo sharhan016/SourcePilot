@@ -11,4 +11,3 @@ def test_unknown_values_are_not_invented() -> None:
     normalized = normalize_requirements("Find ergonomic chairs for the studio")
     assert normalized["quantity"] == 1
     assert "price" not in normalized
-

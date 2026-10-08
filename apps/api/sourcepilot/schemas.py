@@ -121,4 +121,3 @@ class ExecutionView(BaseModel):
     workflow: WorkflowSummary
     tasks: list[TaskView]
     events: list[EventView]
-

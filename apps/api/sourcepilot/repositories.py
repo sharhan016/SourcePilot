@@ -70,4 +70,3 @@ class WorkflowRepository:
             .order_by(ExecutionEvent.timestamp)
         )
         return list(result.scalars())
-

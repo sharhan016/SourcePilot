@@ -42,4 +42,3 @@ class AgentType(StrEnum):
 
 
 STAGE_ORDER = ("research", "verification", "evaluation", "recommendation")
-

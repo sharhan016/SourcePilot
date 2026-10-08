@@ -10,17 +10,165 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.create_table("procurement_requests", sa.Column("id", sa.String(36), primary_key=True), sa.Column("company_name", sa.String(200), nullable=False), sa.Column("company_location", sa.String(200), nullable=False), sa.Column("original_request", sa.Text(), nullable=False), sa.Column("normalized_requirements", sa.JSON(), nullable=False), sa.Column("status", sa.String(30), nullable=False), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False), sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("workflows", sa.Column("id", sa.String(36), primary_key=True), sa.Column("procurement_request_id", sa.String(36), sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"), nullable=False, unique=True), sa.Column("status", sa.String(30), nullable=False), sa.Column("current_stage", sa.String(50), nullable=False), sa.Column("started_at", sa.DateTime(timezone=True)), sa.Column("completed_at", sa.DateTime(timezone=True)), sa.Column("error", sa.Text()), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False), sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("workflow_tasks", sa.Column("id", sa.String(36), primary_key=True), sa.Column("workflow_id", sa.String(36), sa.ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False), sa.Column("agent_type", sa.String(40), nullable=False), sa.Column("task_type", sa.String(80), nullable=False), sa.Column("status", sa.String(30), nullable=False), sa.Column("dependencies", sa.JSON(), nullable=False), sa.Column("input_reference", sa.JSON(), nullable=False), sa.Column("output_reference", sa.JSON(), nullable=False), sa.Column("retry_count", sa.Integer(), nullable=False), sa.Column("error", sa.Text()), sa.Column("started_at", sa.DateTime(timezone=True)), sa.Column("completed_at", sa.DateTime(timezone=True)), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("suppliers", sa.Column("id", sa.String(36), primary_key=True), sa.Column("procurement_request_id", sa.String(36), sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"), nullable=False), sa.Column("name", sa.String(250), nullable=False), sa.Column("website", sa.Text(), nullable=False), sa.Column("location", sa.String(250)), sa.Column("supplier_type", sa.String(80)), sa.Column("contact_info", sa.JSON(), nullable=False), sa.Column("verification_status", sa.String(30), nullable=False), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("products", sa.Column("id", sa.String(36), primary_key=True), sa.Column("supplier_id", sa.String(36), sa.ForeignKey("suppliers.id", ondelete="CASCADE"), nullable=False), sa.Column("name", sa.String(300), nullable=False), sa.Column("manufacturer", sa.String(160)), sa.Column("model", sa.String(200)), sa.Column("specifications", sa.JSON(), nullable=False), sa.Column("unit_price", sa.Numeric(14, 2)), sa.Column("currency", sa.String(3)), sa.Column("available_quantity", sa.Integer()), sa.Column("availability", sa.String(160)), sa.Column("warranty", sa.Text()), sa.Column("delivery", sa.Text()), sa.Column("source_url", sa.Text(), nullable=False), sa.Column("verification_status", sa.String(30), nullable=False), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("evidence", sa.Column("id", sa.String(36), primary_key=True), sa.Column("procurement_request_id", sa.String(36), sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"), nullable=False), sa.Column("supplier_id", sa.String(36), sa.ForeignKey("suppliers.id")), sa.Column("product_id", sa.String(36), sa.ForeignKey("products.id")), sa.Column("source_url", sa.Text(), nullable=False), sa.Column("source_type", sa.String(60), nullable=False), sa.Column("claim", sa.JSON(), nullable=False), sa.Column("classification", sa.String(30), nullable=False), sa.Column("verification_status", sa.String(30), nullable=False), sa.Column("retrieved_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("recommendations", sa.Column("id", sa.String(36), primary_key=True), sa.Column("procurement_request_id", sa.String(36), sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"), nullable=False, unique=True), sa.Column("selected_options", sa.JSON(), nullable=False), sa.Column("evaluation_results", sa.JSON(), nullable=False), sa.Column("total_cost", sa.Numeric(16, 2)), sa.Column("currency", sa.String(3)), sa.Column("reasoning_summary", sa.Text(), nullable=False), sa.Column("evidence_references", sa.JSON(), nullable=False), sa.Column("status", sa.String(30), nullable=False), sa.Column("review_note", sa.Text()), sa.Column("created_at", sa.DateTime(timezone=True), nullable=False), sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False))
-    op.create_table("execution_events", sa.Column("id", sa.String(36), primary_key=True), sa.Column("workflow_id", sa.String(36), sa.ForeignKey("workflows.id", ondelete="CASCADE"), nullable=False), sa.Column("task_id", sa.String(36), sa.ForeignKey("workflow_tasks.id")), sa.Column("agent", sa.String(50), nullable=False), sa.Column("event_type", sa.String(80), nullable=False), sa.Column("capability", sa.String(80)), sa.Column("provider", sa.String(80)), sa.Column("status", sa.String(30), nullable=False), sa.Column("duration_ms", sa.Integer()), sa.Column("metadata_json", sa.JSON(), nullable=False), sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False))
+    op.create_table(
+        "procurement_requests",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column("company_name", sa.String(200), nullable=False),
+        sa.Column("company_location", sa.String(200), nullable=False),
+        sa.Column("original_request", sa.Text(), nullable=False),
+        sa.Column("normalized_requirements", sa.JSON(), nullable=False),
+        sa.Column("status", sa.String(30), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "workflows",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "procurement_request_id",
+            sa.String(36),
+            sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
+        sa.Column("status", sa.String(30), nullable=False),
+        sa.Column("current_stage", sa.String(50), nullable=False),
+        sa.Column("started_at", sa.DateTime(timezone=True)),
+        sa.Column("completed_at", sa.DateTime(timezone=True)),
+        sa.Column("error", sa.Text()),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "workflow_tasks",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "workflow_id",
+            sa.String(36),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("agent_type", sa.String(40), nullable=False),
+        sa.Column("task_type", sa.String(80), nullable=False),
+        sa.Column("status", sa.String(30), nullable=False),
+        sa.Column("dependencies", sa.JSON(), nullable=False),
+        sa.Column("input_reference", sa.JSON(), nullable=False),
+        sa.Column("output_reference", sa.JSON(), nullable=False),
+        sa.Column("retry_count", sa.Integer(), nullable=False),
+        sa.Column("error", sa.Text()),
+        sa.Column("started_at", sa.DateTime(timezone=True)),
+        sa.Column("completed_at", sa.DateTime(timezone=True)),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "suppliers",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "procurement_request_id",
+            sa.String(36),
+            sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("name", sa.String(250), nullable=False),
+        sa.Column("website", sa.Text(), nullable=False),
+        sa.Column("location", sa.String(250)),
+        sa.Column("supplier_type", sa.String(80)),
+        sa.Column("contact_info", sa.JSON(), nullable=False),
+        sa.Column("verification_status", sa.String(30), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "products",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "supplier_id",
+            sa.String(36),
+            sa.ForeignKey("suppliers.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("name", sa.String(300), nullable=False),
+        sa.Column("manufacturer", sa.String(160)),
+        sa.Column("model", sa.String(200)),
+        sa.Column("specifications", sa.JSON(), nullable=False),
+        sa.Column("unit_price", sa.Numeric(14, 2)),
+        sa.Column("currency", sa.String(3)),
+        sa.Column("available_quantity", sa.Integer()),
+        sa.Column("availability", sa.String(160)),
+        sa.Column("warranty", sa.Text()),
+        sa.Column("delivery", sa.Text()),
+        sa.Column("source_url", sa.Text(), nullable=False),
+        sa.Column("verification_status", sa.String(30), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "evidence",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "procurement_request_id",
+            sa.String(36),
+            sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("supplier_id", sa.String(36), sa.ForeignKey("suppliers.id")),
+        sa.Column("product_id", sa.String(36), sa.ForeignKey("products.id")),
+        sa.Column("source_url", sa.Text(), nullable=False),
+        sa.Column("source_type", sa.String(60), nullable=False),
+        sa.Column("claim", sa.JSON(), nullable=False),
+        sa.Column("classification", sa.String(30), nullable=False),
+        sa.Column("verification_status", sa.String(30), nullable=False),
+        sa.Column("retrieved_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "recommendations",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "procurement_request_id",
+            sa.String(36),
+            sa.ForeignKey("procurement_requests.id", ondelete="CASCADE"),
+            nullable=False,
+            unique=True,
+        ),
+        sa.Column("selected_options", sa.JSON(), nullable=False),
+        sa.Column("evaluation_results", sa.JSON(), nullable=False),
+        sa.Column("total_cost", sa.Numeric(16, 2)),
+        sa.Column("currency", sa.String(3)),
+        sa.Column("reasoning_summary", sa.Text(), nullable=False),
+        sa.Column("evidence_references", sa.JSON(), nullable=False),
+        sa.Column("status", sa.String(30), nullable=False),
+        sa.Column("review_note", sa.Text()),
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+    )
+    op.create_table(
+        "execution_events",
+        sa.Column("id", sa.String(36), primary_key=True),
+        sa.Column(
+            "workflow_id",
+            sa.String(36),
+            sa.ForeignKey("workflows.id", ondelete="CASCADE"),
+            nullable=False,
+        ),
+        sa.Column("task_id", sa.String(36), sa.ForeignKey("workflow_tasks.id")),
+        sa.Column("agent", sa.String(50), nullable=False),
+        sa.Column("event_type", sa.String(80), nullable=False),
+        sa.Column("capability", sa.String(80)),
+        sa.Column("provider", sa.String(80)),
+        sa.Column("status", sa.String(30), nullable=False),
+        sa.Column("duration_ms", sa.Integer()),
+        sa.Column("metadata_json", sa.JSON(), nullable=False),
+        sa.Column("timestamp", sa.DateTime(timezone=True), nullable=False),
+    )
 
 
 def downgrade() -> None:
-    for table in ("execution_events", "recommendations", "evidence", "products", "suppliers", "workflow_tasks", "workflows", "procurement_requests"):
+    for table in (
+        "execution_events",
+        "recommendations",
+        "evidence",
+        "products",
+        "suppliers",
+        "workflow_tasks",
+        "workflows",
+        "procurement_requests",
+    ):
         op.drop_table(table)
-

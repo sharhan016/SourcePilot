@@ -191,4 +191,3 @@ class ExecutionEvent(Base):
     timestamp: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     workflow: Mapped[Workflow] = relationship(back_populates="events")
-
