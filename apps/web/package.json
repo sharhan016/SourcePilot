@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "check": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
+    "check": "tsc --noEmit && vite build",
     "test": "vitest run"
   },
   "dependencies": {
@@ -27,4 +27,3 @@
     "vitest": "latest"
   }
 }
-

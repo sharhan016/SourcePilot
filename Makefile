@@ -1,4 +1,4 @@
-.PHONY: verify test lint web-check
+.PHONY: verify test lint web-check web-test
 
 test:
 	python3 -m pytest tests -q
@@ -9,5 +9,8 @@ lint:
 web-check:
 	npm --prefix apps/web run check
 
-verify: test web-check
+web-test:
+	npm --prefix apps/web run test
 
+verify: lint test web-test web-check
+	python3 -m compileall -q apps/api/sourcepilot tests

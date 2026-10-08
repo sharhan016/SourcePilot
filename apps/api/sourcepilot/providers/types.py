@@ -1,7 +1,9 @@
+import ipaddress
 from decimal import Decimal
 from typing import Any
+from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, field_validator
 
 
 class SearchDocument(BaseModel):
@@ -30,6 +32,20 @@ class ProductCandidate(BaseModel):
     source_url: HttpUrl
     source_type: str = "web"
     is_first_party: bool = False
+
+    @field_validator("supplier_website", "source_url")
+    @classmethod
+    def public_http_url(cls, value: HttpUrl) -> HttpUrl:
+        host = urlparse(str(value)).hostname
+        if host in {"localhost", "localhost.localdomain"}:
+            raise ValueError("external evidence URL cannot target localhost")
+        try:
+            address = ipaddress.ip_address(host or "")
+        except ValueError:
+            return value
+        if not address.is_global:
+            raise ValueError("external evidence URL must use a public address")
+        return value
 
 
 class LLMMessage(BaseModel):

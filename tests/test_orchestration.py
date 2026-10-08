@@ -8,7 +8,7 @@ from sourcepilot.capabilities import CapabilityExecutor, ExecutionPolicy
 from sourcepilot.config import Settings
 from sourcepilot.db import Base
 from sourcepilot.domain import TaskStatus, WorkflowStatus
-from sourcepilot.models import Recommendation, Workflow
+from sourcepilot.models import Evidence, Recommendation, Workflow
 from sourcepilot.orchestration import Orchestrator, dependencies_satisfied
 from sourcepilot.providers.types import ProductCandidate, SearchDocument
 from sourcepilot.services import ProcurementService
@@ -142,10 +142,12 @@ async def test_workflow_runs_agents_persists_result_and_parallelizes_verificatio
                 )
             )
         ).scalar_one()
+        evidence_count = len((await session.execute(select(Evidence))).scalars().all())
         assert workflow.status == WorkflowStatus.COMPLETED
         assert recommendation.status == "ready"
         assert recommendation.total_cost == Decimal("7500000.00")
         assert recommendation.evidence_references
+        assert evidence_count >= 6  # extracted claims plus independent verification sources
     assert search.peak >= 2
     await engine.dispose()
 

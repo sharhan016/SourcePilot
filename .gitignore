@@ -12,4 +12,6 @@ node_modules/
 dist/
 coverage/
 *.egg-info/
-
+*.tsbuildinfo
+apps/web/vite.config.js
+apps/web/vite.config.d.ts

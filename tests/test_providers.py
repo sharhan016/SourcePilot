@@ -2,9 +2,10 @@ import json
 
 import httpx
 import pytest
+from pydantic import ValidationError
 from sourcepilot.providers.llm import build_openai, build_openrouter
 from sourcepilot.providers.search import ExaSearchProvider, FirecrawlSearchProvider
-from sourcepilot.providers.types import LLMMessage
+from sourcepilot.providers.types import LLMMessage, ProductCandidate
 
 
 @pytest.mark.asyncio
@@ -70,3 +71,13 @@ async def test_llm_provider_switching_uses_same_contract(factory, name) -> None:
         response = await provider.generate([LLMMessage(role="user", content="hello")])
     assert provider.name == name
     assert response == '{"ok":true}'
+
+
+def test_extracted_candidates_cannot_target_private_networks() -> None:
+    with pytest.raises(ValidationError):
+        ProductCandidate(
+            supplier_name="Untrusted source",
+            supplier_website="http://127.0.0.1/admin",
+            product_name="Laptop",
+            source_url="http://169.254.169.254/latest/meta-data",
+        )

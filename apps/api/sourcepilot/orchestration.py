@@ -79,6 +79,7 @@ class Orchestrator:
             try:
                 candidates: list[ProductCandidate] = []
                 verification: dict[str, str] = {}
+                corroboration: dict[str, list[str]] = {}
                 evaluations: list[dict[str, Any]] = []
                 for task in workflow.tasks:
                     if task.status == TaskStatus.COMPLETED:
@@ -98,9 +99,9 @@ class Orchestrator:
                         candidates = candidates or await self._candidate_snapshot(
                             session, workflow.request.id
                         )
-                        verification = await self._verify(candidates)
+                        verification, corroboration = await self._verify(candidates)
                         await self._persist_verification(
-                            session, workflow.request, candidates, verification
+                            session, workflow.request, verification, corroboration
                         )
                         output = {
                             "verified": sum(value == "verified" for value in verification.values())
@@ -196,7 +197,9 @@ class Orchestrator:
         finally:
             await client.aclose()
 
-    async def _verify(self, candidates: list[ProductCandidate]) -> dict[str, str]:
+    async def _verify(
+        self, candidates: list[ProductCandidate]
+    ) -> tuple[dict[str, str], dict[str, list[str]]]:
         search, _, client = await self._capabilities()
         agent = VerificationAgent(search)
         try:
@@ -206,10 +209,12 @@ class Orchestrator:
         finally:
             await client.aclose()
         verification: dict[str, str] = {}
+        corroboration: dict[str, list[str]] = {}
         for candidate, result in zip(candidates, results, strict=True):
             key = str(candidate.source_url)
             verification[key] = "unavailable" if isinstance(result, Exception) else result[0]
-        return verification
+            corroboration[key] = [] if isinstance(result, Exception) else result[1]
+        return verification, corroboration
 
     async def _capture_event(self, event: dict[str, Any]) -> None:
         self.pending_events.append(event)
@@ -328,8 +333,8 @@ class Orchestrator:
         self,
         session: AsyncSession,
         request: ProcurementRequest,
-        candidates: list[ProductCandidate],
         verification: dict[str, str],
+        corroboration: dict[str, list[str]],
     ) -> None:
         suppliers = (
             (
@@ -348,6 +353,25 @@ class Orchestrator:
                 status = verification.get(product.source_url, VerificationStatus.UNAVAILABLE)
                 product.verification_status = status
                 product_statuses.append(status)
+                for source_url in corroboration.get(product.source_url, []):
+                    session.add(
+                        Evidence(
+                            id=uuid4(),
+                            procurement_request_id=request.id,
+                            supplier_id=supplier.id,
+                            product_id=product.id,
+                            source_url=source_url,
+                            source_type="verification_search",
+                            claim={"corroborates_product": product.name},
+                            classification=(
+                                "first_party"
+                                if urlparse(source_url).hostname
+                                == urlparse(supplier.website).hostname
+                                else "third_party"
+                            ),
+                            verification_status=status,
+                        )
+                    )
             supplier.verification_status = (
                 VerificationStatus.VERIFIED
                 if VerificationStatus.VERIFIED in product_statuses
@@ -396,10 +420,12 @@ class Orchestrator:
         self, session: AsyncSession, request_id: str
     ) -> list[dict[str, Any]]:
         candidates = await self._candidate_snapshot(session, request_id)
-        verification = {
-            str(item.source_url): "verified" if item.is_first_party else "extracted"
-            for item in candidates
-        }
+        products = (
+            await session.execute(
+                select(Product).join(Supplier).where(Supplier.procurement_request_id == request_id)
+            )
+        ).scalars()
+        verification = {product.source_url: product.verification_status for product in products}
         request = await session.get(ProcurementRequest, request_id)
         return EvaluationAgent().evaluate(
             candidates, verification, request.normalized_requirements["quantity"]

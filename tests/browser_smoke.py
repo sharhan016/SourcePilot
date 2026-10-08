@@ -5,7 +5,6 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-
 REQUEST = {
     "id": "request-1",
     "original_request": "Find 50 MacBook Pro 14-inch laptops for the company.",
@@ -94,7 +93,10 @@ def run() -> None:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 1000})
         errors: list[str] = []
-        page.on("console", lambda message: errors.append(message.text) if message.type == "error" else None)
+        page.on(
+            "console",
+            lambda message: errors.append(message.text) if message.type == "error" else None,
+        )
 
         def route_api(route) -> None:
             url = route.request.url
@@ -114,7 +116,9 @@ def run() -> None:
 
         page.route("**/api/v1/**", route_api)
         page.goto("http://127.0.0.1:5173", wait_until="networkidle")
-        assert page.get_by_role("heading", name="Turn a requirement into a defensible shortlist.").is_visible()
+        assert page.get_by_role(
+            "heading", name="Turn a requirement into a defensible shortlist."
+        ).is_visible()
         assert page.get_by_text("Ready for review").is_visible()
         page.screenshot(path=str(output / "dashboard.png"), full_page=True)
 
@@ -139,4 +143,3 @@ def run() -> None:
 
 if __name__ == "__main__":
     run()
-
