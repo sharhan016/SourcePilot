@@ -1,7 +1,9 @@
+import json
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -10,7 +12,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
     database_url: str = "sqlite+aiosqlite:///./sourcepilot.db"
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: Annotated[list[str], NoDecode] = ["http://localhost:5173"]
     company_name: str = "Acme Operations"
     company_location: str = "Bengaluru, India"
     max_concurrent_workflows: int = 2
@@ -30,6 +32,8 @@ class Settings(BaseSettings):
     @classmethod
     def split_origins(cls, value: object) -> object:
         if isinstance(value, str):
+            if value.lstrip().startswith("["):
+                return json.loads(value)
             return [item.strip() for item in value.split(",") if item.strip()]
         return value
 

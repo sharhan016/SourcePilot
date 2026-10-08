@@ -64,7 +64,6 @@ class OpenAICompatibleProvider:
             json={
                 "model": self.model,
                 "messages": [message.model_dump() for message in messages],
-                "temperature": 0,
                 "response_format": {"type": "json_object"},
             },
         )

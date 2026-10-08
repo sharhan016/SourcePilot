@@ -14,6 +14,10 @@ class CandidateBatch(BaseModel):
     candidates: list[ProductCandidate] = Field(default_factory=list)
 
 
+class ResearchExhaustedError(RuntimeError):
+    """Raised when research cannot produce an evidence-backed product candidate."""
+
+
 class ResearchAgent:
     def __init__(self, search: WebSearchCapability, llm, max_rounds: int = 2) -> None:
         self.search = search
@@ -32,14 +36,25 @@ class ResearchAgent:
         for query in queries:
             for document in await self.search.search(query):
                 documents[str(document.url)] = document
+        if not documents:
+            raise ResearchExhaustedError("research returned no source documents")
         batches = await asyncio.gather(
             *(self._extract(document, requirements) for document in documents.values()),
             return_exceptions=True,
         )
         candidates: list[ProductCandidate] = []
+        failures = 0
         for batch in batches:
             if isinstance(batch, CandidateBatch):
                 candidates.extend(batch.candidates)
+            elif isinstance(batch, Exception):
+                failures += 1
+        if not candidates:
+            if failures == len(documents):
+                raise ResearchExhaustedError(f"all {failures} source extractions failed")
+            raise ResearchExhaustedError(
+                f"research extracted no product candidates from {len(documents)} sources"
+            )
         return self._deduplicate(candidates)
 
     async def _extract(
@@ -111,12 +126,16 @@ class EvaluationAgent:
         evaluated: list[dict[str, Any]] = []
         for candidate in candidates:
             key = str(candidate.source_url)
+            if candidate.available_quantity is None:
+                quantity_status = "unconfirmed"
+            elif candidate.available_quantity >= quantity:
+                quantity_status = "confirmed"
+            else:
+                quantity_status = "insufficient"
             qualifies = (
                 verification.get(key) == "verified"
                 and candidate.unit_price is not None
-                and (
-                    candidate.available_quantity is None or candidate.available_quantity >= quantity
-                )
+                and quantity_status == "confirmed"
             )
             total = candidate.unit_price * quantity if candidate.unit_price is not None else None
             evaluated.append(
@@ -131,6 +150,8 @@ class EvaluationAgent:
                     else None,
                     "total_cost": str(total) if total is not None else None,
                     "currency": candidate.currency,
+                    "quantity_status": quantity_status,
+                    "available_quantity": candidate.available_quantity,
                     "availability": candidate.availability,
                     "warranty": candidate.warranty,
                     "delivery": candidate.delivery,

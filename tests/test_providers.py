@@ -64,6 +64,7 @@ async def test_llm_provider_switching_uses_same_contract(factory, name) -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         payload = json.loads(request.content)
         assert payload["model"] == "procurement-model"
+        assert "temperature" not in payload
         return httpx.Response(200, json={"choices": [{"message": {"content": '{"ok":true}'}}]})
 
     async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
