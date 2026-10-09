@@ -72,20 +72,20 @@ assert services["api"]["build"]["dockerfile"] == "infrastructure/docker/api.Dock
 PY
 
 VITE_API_URL=/api/v1 npm --prefix apps/web run build >/dev/null
-if rg -n "http://localhost:8000|http://127\.0\.0\.1:8000" apps/web/dist; then
+if grep -R -n -E "http://localhost:8000|http://127\.0\.0\.1:8000" apps/web/dist; then
   echo "production frontend artifact contains a loopback API address" >&2
   exit 1
 fi
 
-rg -q 'uses: hostinger/deploy-on-vps@v2' .github/workflows/deploy-hostinger.yml
+grep -q 'uses: hostinger/deploy-on-vps@v2' .github/workflows/deploy-hostinger.yml
 for secret in \
   HOSTINGER_API_KEY HOSTINGER_VM_ID POSTGRES_PASSWORD \
   OPENAI_API_KEY EXA_API_KEY FIRECRAWL_API_KEY; do
-  rg -q "secrets\.${secret}" .github/workflows/deploy-hostinger.yml || {
+  grep -q "secrets\.${secret}" .github/workflows/deploy-hostinger.yml || {
     echo "deployment workflow does not pass ${secret}" >&2
     exit 1
   }
 done
 
-rg -q 'proxy_pass http://api:8000' infrastructure/nginx/sourcepilot.conf
+grep -q 'proxy_pass http://api:8000' infrastructure/nginx/sourcepilot.conf
 echo "Hostinger deployment contract validated"
