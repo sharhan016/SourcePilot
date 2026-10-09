@@ -1,0 +1,15 @@
+.git
+.github
+.agents
+.codex
+.vertex
+.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+apps/web/dist
+.env
+.env.*
+!.env.example
+docs
+tests

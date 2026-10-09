@@ -124,6 +124,22 @@ python /path/to/with_server.py \
   -- python tests/browser_smoke.py
 ```
 
+## Production deployment
+
+Pushes to `main` can deploy the verified production Compose project to
+`https://sourcepilot.sharhan.dev` through Hostinger's official VPS action. The deployment
+uses Nginx for the React application and same-origin API proxying, the existing VPS Traefik
+router for TLS, and a persistent PostgreSQL volume. No SSH key is required for this public
+repository.
+
+See [`docs/deployment/hostinger.md`](docs/deployment/hostinger.md) for required GitHub
+secrets, the Cloudflare record, first-deployment checks, and rollback guidance. Validate
+the production contract locally with:
+
+```console
+make deploy-check
+```
+
 ## Vertex Harness workflow
 
 Use the installed Vertex CLI from the repository root:

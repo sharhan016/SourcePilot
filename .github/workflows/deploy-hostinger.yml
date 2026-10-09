@@ -1,0 +1,55 @@
+name: Verify and deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: sourcepilot-hostinger-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Install dependencies
+        run: |
+          python -m pip install -e '.[dev]'
+          npm ci --prefix apps/web
+      - name: Verify application
+        run: make verify
+      - name: Validate production deployment
+        run: bash scripts/verify_hostinger_deployment.sh
+
+  deploy:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - name: Deploy Compose project through Hostinger
+        uses: hostinger/deploy-on-vps@v2
+        with:
+          api-key: ${{ secrets.HOSTINGER_API_KEY }}
+          virtual-machine: ${{ secrets.HOSTINGER_VM_ID }}
+          project-name: sourcepilot
+          docker-compose-path: compose.production.yaml
+          environment-variables: |
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+            EXA_API_KEY=${{ secrets.EXA_API_KEY }}
+            FIRECRAWL_API_KEY=${{ secrets.FIRECRAWL_API_KEY }}

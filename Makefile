@@ -1,4 +1,4 @@
-.PHONY: verify test lint web-check web-test
+.PHONY: verify test lint web-check web-test deploy-check
 
 test:
 	python3 -m pytest tests -q
@@ -11,6 +11,9 @@ web-check:
 
 web-test:
 	npm --prefix apps/web run test
+
+deploy-check:
+	bash scripts/verify_hostinger_deployment.sh
 
 verify: lint test web-test web-check
 	python3 -m compileall -q apps/api/sourcepilot tests

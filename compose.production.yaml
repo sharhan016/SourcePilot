@@ -1,0 +1,110 @@
+name: sourcepilot
+
+x-runtime-environment: &runtime-environment
+  APP_ENV: production
+  LOG_LEVEL: INFO
+  DATABASE_URL: postgresql+asyncpg://sourcepilot:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}@postgres:5432/sourcepilot
+  CORS_ORIGINS: '["https://sourcepilot.sharhan.dev"]'
+  COMPANY_NAME: IT Essentials (ITE)
+  COMPANY_LOCATION: Sharjah, United Arab Emirates
+  COMPANY_COUNTRY: United Arab Emirates
+  DEFAULT_CURRENCY: AED
+  PROCUREMENT_REGION: UAE
+  SOURCING_REGIONS: '["United Arab Emirates","GCC"]'
+  WORKFLOW_POLL_SECONDS: "2"
+  MAX_CONCURRENT_WORKFLOWS: "2"
+  MAX_CONCURRENT_TOOLS: "5"
+  PROVIDER_TIMEOUT_SECONDS: "20"
+  PROVIDER_MAX_RETRIES: "2"
+  RESEARCH_MAX_ROUNDS: "2"
+  LLM_PROVIDER: openai
+  LLM_MODEL: gpt-5-mini
+  OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+  SEARCH_PROVIDER: exa
+  EXA_API_KEY: ${EXA_API_KEY:?EXA_API_KEY is required}
+  FIRECRAWL_API_KEY: ${FIRECRAWL_API_KEY:-}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sourcepilot
+      POSTGRES_USER: sourcepilot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - sourcepilot_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sourcepilot -d sourcepilot"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    networks:
+      - application
+
+  api:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    restart: unless-stopped
+    environment: *runtime-environment
+    command: ["sh", "-c", "alembic -c apps/api/alembic.ini upgrade head && exec uvicorn sourcepilot.main:app --host 0.0.0.0 --port 8000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    expose:
+      - "8000"
+    networks:
+      - application
+
+  worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/api.Dockerfile
+    restart: unless-stopped
+    environment: *runtime-environment
+    command: ["python", "-m", "sourcepilot.worker"]
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - application
+
+  web:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/web.production.Dockerfile
+      args:
+        VITE_API_URL: /api/v1
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    expose:
+      - "80"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sourcepilot.rule=Host(`sourcepilot.sharhan.dev`)
+      - traefik.http.routers.sourcepilot.entrypoints=websecure
+      - traefik.http.routers.sourcepilot.tls=true
+      - traefik.http.routers.sourcepilot.tls.certresolver=letsencrypt
+      - traefik.http.services.sourcepilot.loadbalancer.server.port=80
+    networks:
+      - application
+
+volumes:
+  sourcepilot_postgres:
+
+networks:
+  application:
